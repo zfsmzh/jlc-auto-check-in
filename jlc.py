@@ -13,6 +13,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from serverchan_sdk import sc_send
 
 # 全局变量用于收集总结日志
 in_summary = False
@@ -469,6 +470,7 @@ def click_gift_buttons(driver, account_index):
                 if last_day:
                     driver.refresh()
                     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+                    time.sleep(12)
                 
             except Exception as e:
                 log(f"账号 {account_index} - ⚠ 无法点击7天好礼: {e}")
@@ -478,7 +480,7 @@ def click_gift_buttons(driver, account_index):
             try:
                 monthly_gift = driver.find_element(By.XPATH, '//div[contains(@class, "sign_text__r9zaN")]/span[text()="月度好礼"]')
                 monthly_gift.click()
-                log(f"账号 {account_index} - ✅ 检测到今天是月底，成功点击月度好礼")          
+                log(f"账号 {account_index} - ✅ 检测到今天是月底，成功点击月度好礼～")          
                 
                 WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
                 reward_result = capture_reward_info(driver, account_index, "月度")
@@ -1221,6 +1223,21 @@ def push_summary():
                 log("Server酱-日志已推送")
         except:
             pass
+
+    # Server酱3
+    serverchan3_sckey = os.getenv('SERVERCHAN3_SCKEY') 
+    if serverchan3_sckey:
+        try:
+            textSC3 = "\n\n".join(summary_logs)
+            titleSC3 = title
+            options = {"tags": "嘉立创|签到"}  # 可选参数，根据需求添加
+            response = sc_send(serverchan3_sckey, titleSC3, textSC3, options)            
+            if response.get("code") == 0:  # 新版成功返回 code=0
+                log("Server酱3-日志已推送")
+            else:
+                log(f"Server酱推送失败: {response.get('message')}")                
+        except Exception as e:
+            log(f"Server酱推送异常: {str(e)}")    
 
     # 酷推 (CoolPush)
     coolpush_skey = os.getenv('COOLPUSH_SKEY')
